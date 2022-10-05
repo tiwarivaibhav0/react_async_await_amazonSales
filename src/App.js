@@ -104,67 +104,62 @@ function App() {
       }
     });
   };
-  const fetchhandler = (e) => {
+  const fetchhandler = async (e) => {
     setLoading(true);
     var url =
       "https://multi-account.sellernext.com/home/public/connector/profile/getAllCategory/";
     // console.log(url);
-    fetch(url, {
+    var res = await fetch(url, {
       method: "POST",
       headers: headers,
       body: JSON.stringify(payload),
-    })
-      .then((res) => res.json())
-      .then((fetchedData) => {
-        // console.log(fetchedData);
-        setLoading(false);
-        setData(fetchedData.data);
-        let nextOptions = [];
-        fetchedData.data.map((it, i) => {
-          nextOptions.push({ label: it.name, value: it.name });
-        });
-        options.push(nextOptions);
-        setOptions([...options]);
-        setSelectRow([...selectRow, 1]);
-      });
+    });
+    var fetchedData = await res.json();
+    setLoading(false);
+    setData(fetchedData.data);
+    let nextOptions = [];
+    fetchedData.data.map((it, i) => {
+      nextOptions.push({ label: it.name, value: it.name });
+    });
+    options.push(nextOptions);
+    setOptions([...options]);
+    setSelectRow([...selectRow, 1]);
   };
   useEffect(() => {
     fetchhandler();
   }, [payload]);
 
-  const categoryfetchhandler = () => {
+  const categoryfetchhandler = async () => {
     setAttributesDisplay(true);
     setLoading(true);
     var url =
       "https://multi-account.sellernext.com/home/public/connector/profile/getCategoryAttributes/";
-    fetch(url, {
+    var res = await fetch(url, {
       method: "POST",
       headers: headers,
       body: JSON.stringify(payloadAttribute),
-    })
-      .then((res) => res.json())
-      .then((fetchedData) => {
-        console.log(fetchedData.data);
-        setLoading(false);
+    });
+    var fetchedData = await res.json();
+    console.log(fetchedData.data);
+    setLoading(false);
 
-        let nextOptions = [];
-        var duplicateKeys = {};
-        for (let i in fetchedData.data) {
-          for (let j in fetchedData.data[i]) {
-            console.log(i, j);
-            if (!duplicateKeys[fetchedData.data[i][j]["label"]]) {
-              nextOptions.push({
-                label: fetchedData.data[i][j]["label"],
-                value: fetchedData.data[i][j]["label"],
-              });
-              duplicateKeys[fetchedData.data[i][j]["label"]] = 1;
-            }
-          }
+    let nextOptions = [];
+    var duplicateKeys = {};
+    for (let i in fetchedData.data) {
+      for (let j in fetchedData.data[i]) {
+        console.log(i, j);
+        if (!duplicateKeys[fetchedData.data[i][j]["label"]]) {
+          nextOptions.push({
+            label: fetchedData.data[i][j]["label"],
+            value: fetchedData.data[i][j]["label"],
+          });
+          duplicateKeys[fetchedData.data[i][j]["label"]] = 1;
         }
-        console.log(nextOptions.length);
+      }
+    }
+    console.log(nextOptions.length);
 
-        setattributeOptionsArray(nextOptions);
-      });
+    setattributeOptionsArray(nextOptions);
   };
   return (
     <div className="App">
