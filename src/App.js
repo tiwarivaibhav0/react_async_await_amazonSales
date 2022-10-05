@@ -1,8 +1,8 @@
-import logo from "./logo.svg";
 import "./App.css";
 import {
   Button,
   Card,
+  FormLayout,
   Frame,
   Layout,
   Link,
@@ -10,22 +10,49 @@ import {
   Page,
   Select,
   SkeletonBodyText,
-  SkeletonDisplayText,
-  SkeletonPage,
-  SkeletonTabs,
-  SkeletonThumbnail,
   TextContainer,
   TextField,
 } from "@shopify/polaris";
 import { useEffect, useState } from "react";
+const headers = {
+  accept: "application/json",
+  "Content-Type": "application/json",
+  appTag: "amazon_sales_channel",
+  authorization: `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyX2lkIjoiNjMzMjlkN2YwNDUxYzA3NGFhMGUxNWE4Iiwicm9sZSI6ImN1c3RvbWVyIiwiZXhwIjoxNjY0OTg4NjM3LCJpc3MiOiJodHRwczpcL1wvYXBwcy5jZWRjb21tZXJjZS5jb20iLCJ0b2tlbl9pZCI6IjYzM2Q3ZDlkYjgyM2I5MTVhMzc0NTA3NSJ9.eZKlcA00P9R_hw-ThPqMP1G_ntdht2hoh2Sx9FhfFXsw1725An17BDLLEA5GYGEXr-vtrUMoWq2E7_sRAkFvvbBrEljQenYRUH0VxIdgFvUk3ptoh9_x63ZhOpS2LhW0v5G16fZiY4StoArQZ3TVRrzqf9b5ZGVrlxh7RjR6oZEzLg6UHqPdYXn5o1J0FdoyCndaDo8y3XwNBPUJU1BqnVMxeYYFnYlxWCpH1jq8IjSrP1YSQARMZhAfqrxuN73utQMwf5EYR4_2fM8Iz-LiwN7wVkRkoj7hDTeQtVx_736tycu6f4lLf03CZ0mxzrbAXuifl3eJsHKso0lgL4UxPg`,
+  "Ced-Source-Id": 500,
+  "Ced-Source-Name": "shopify",
+  "Ced-Target-Id": 530,
+  "Ced-Target-Name": "amazon",
+};
+var payloadAttribute = {
+  target_marketplace: "eyJtYXJrZXRwbGFjZSI6ImFsbCIsInNob3BfaWQiOm51bGx9",
+  target: {
+    marketplace: "amazon",
+    shopId: "530",
+  },
+  source: {
+    marketplace: "shopify",
+    shopId: "500",
+  },
+  data: {
+    barcode_exemption: false,
+    browser_node_id: "1380072031",
+    category: "",
+    sub_category: "",
+  },
+};
 
 function App() {
   const [loading, setLoading] = useState(false);
-
   const [data, setData] = useState([]);
   const [options, setOptions] = useState([]);
   const [selectedCategory, setselecetedCategory] = useState([]);
   const [selectRow, setSelectRow] = useState([]);
+  const [addattributesDisplay, setAttributesDisplay] = useState(false);
+  const [attributeOptions, showAttributeOptions] = useState(false);
+  const [attributeOptionsArray, setattributeOptionsArray] = useState([]);
+  const [selectedAttributeRow, setselectedAttributeRow] = useState([]);
+  const [selectedAttributeArray, setselectedAttributeArray] = useState([]);
   const [payload, setPayload] = useState({
     target_marketplace: "eyJtYXJrZXRwbGFjZSI6ImFsbCIsInNob3BfaWQiOm51bGx9",
     selected: [],
@@ -34,36 +61,11 @@ function App() {
       shopId: "530",
     },
   });
-  const [payloadAttribute, setpayloadAttribute] = useState({
-    target_marketplace: "eyJtYXJrZXRwbGFjZSI6ImFsbCIsInNob3BfaWQiOm51bGx9",
-    target: {
-      marketplace: "amazon",
-      shopId: "530",
-    },
-    source: {
-      marketplace: "shopify",
-      shopId: "500",
-    },
-    data: {
-      barcode_exemption: false,
-      browser_node_id: "1380072031",
-      category: "",
-      sub_category: "",
-    },
-  });
-  const [addattributesDisplay, setAttributesDisplay] = useState(false);
-  const [attributeOptions, showAttributeOptions] = useState(false);
-  const [attributeOptionsArray, setattributeOptionsArray] = useState([]);
-  const [selectedAttributeRow, setselectedAttributeRow] = useState([]);
-  const [selectedAttributeArray, setselectedAttributeArray] = useState([]);
+
   const handleOptionsChange = (e, i) => {
-    // alert(i)
-    let tempSelectedCategory = [...selectedCategory];
-    tempSelectedCategory[i] = e;
-    setselecetedCategory(tempSelectedCategory);
-    // setselecetedCategory(e);
+    selectedCategory[i] = e;
+    setselecetedCategory([...selectedCategory]);
     let tempPayload = { ...payload };
-    // tempPayload.selected.push(e);
     console.log(data);
     data.map((it, i) => {
       if (it.name === e) {
@@ -73,7 +75,6 @@ function App() {
         } else {
           payloadAttribute.data.category = it.category["primary-category"];
           payloadAttribute.data.sub_category = it.category["sub-category"];
-          setpayloadAttribute({ ...payloadAttribute });
           categoryfetchhandler();
         }
       }
@@ -92,18 +93,13 @@ function App() {
     });
   };
   const deleteHandler = (e, i, val) => {
-    // alert(val);
     e.preventDefault();
-    let tempSelectedAttributedArray = [...selectedAttributeArray];
-    tempSelectedAttributedArray.splice(i, 1);
-    setselectedAttributeArray(tempSelectedAttributedArray);
-    // alert(i);
-    let tempRow = [...selectedAttributeRow];
-    tempRow.splice(i, 1);
-    setselectedAttributeRow(tempRow);
+    selectedAttributeArray.splice(i, 1);
+    setselectedAttributeArray([...selectedAttributeArray]);
+    selectedAttributeRow.splice(i, 1);
+    setselectedAttributeRow([...selectedAttributeRow]);
     attributeOptionsArray.map((it, j) => {
       if (it.label === val) {
-        // alert();
         it["disabled"] = false;
       }
     });
@@ -115,64 +111,45 @@ function App() {
     // console.log(url);
     fetch(url, {
       method: "POST",
-      headers: {
-        accept: "application/json",
-        "Content-Type": "application/json",
-        appTag: "amazon_sales_channel",
-        authorization: `Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyX2lkIjoiNjMzMjlkN2YwNDUxYzA3NGFhMGUxNWE4Iiwicm9sZSI6ImN1c3RvbWVyIiwiZXhwIjoxNjY0OTczOTY4LCJpc3MiOiJodHRwczpcL1wvYXBwcy5jZWRjb21tZXJjZS5jb20iLCJ0b2tlbl9pZCI6IjYzM2Q0NDUwZjBiZjcwNjMzMDJiYWE4NyJ9.n289tau-BROIUnCvR_RMgh5_W0KYAkVhMZRbZcvnoXDyL7NdIxhk8SeBRDGyQp_Ug534ErQSS7ufAi3QA35EAChgsKOAxyHNnXRIEfwkF4uMI865Qa83uzFVEoS5nLG_jtC41nBY-8YnCiaHF72RqieEVMw3LRnFOoNThAtyILPM7TkvYETEjduj_9H4J01pWYck0D47tDugVIV4L_JvApOc9TKeIcpIQ9Ep2b5TjMXdVX-PWmR6p64ALBEKUiF0tVEJ7j6qZLrFfk87JKnObUlktb3Vm9gN8KuG7DxrzlF42V74zrdQAxTH5k4nwmbx2X9kaUex5DcLbuOImtmnKw`,
-        "Ced-Source-Id": 500,
-        "Ced-Source-Name": "shopify",
-        "Ced-Target-Id": 530,
-        "Ced-Target-Name": "amazon",
-      },
+      headers: headers,
       body: JSON.stringify(payload),
     })
       .then((res) => res.json())
       .then((fetchedData) => {
-        console.log(fetchedData);
+        // console.log(fetchedData);
         setLoading(false);
         setData(fetchedData.data);
         let nextOptions = [];
         fetchedData.data.map((it, i) => {
           nextOptions.push({ label: it.name, value: it.name });
         });
-        let tempOptionArray = [...options];
-        tempOptionArray.push(nextOptions);
-        setOptions(tempOptionArray);
+        options.push(nextOptions);
+        setOptions([...options]);
         setSelectRow([...selectRow, 1]);
       });
   };
   useEffect(() => {
-    // alert("Use Effect Called");
     fetchhandler();
   }, [payload]);
 
   const categoryfetchhandler = () => {
     setAttributesDisplay(true);
+    setLoading(true);
     var url =
       "https://multi-account.sellernext.com/home/public/connector/profile/getCategoryAttributes/";
-    // console.log(url);
     fetch(url, {
       method: "POST",
-      headers: {
-        accept: "application/json",
-        "Content-Type": "application/json",
-        appTag: "amazon_sales_channel",
-        authorization: `Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyX2lkIjoiNjMzMjlkN2YwNDUxYzA3NGFhMGUxNWE4Iiwicm9sZSI6ImN1c3RvbWVyIiwiZXhwIjoxNjY0OTczOTY4LCJpc3MiOiJodHRwczpcL1wvYXBwcy5jZWRjb21tZXJjZS5jb20iLCJ0b2tlbl9pZCI6IjYzM2Q0NDUwZjBiZjcwNjMzMDJiYWE4NyJ9.n289tau-BROIUnCvR_RMgh5_W0KYAkVhMZRbZcvnoXDyL7NdIxhk8SeBRDGyQp_Ug534ErQSS7ufAi3QA35EAChgsKOAxyHNnXRIEfwkF4uMI865Qa83uzFVEoS5nLG_jtC41nBY-8YnCiaHF72RqieEVMw3LRnFOoNThAtyILPM7TkvYETEjduj_9H4J01pWYck0D47tDugVIV4L_JvApOc9TKeIcpIQ9Ep2b5TjMXdVX-PWmR6p64ALBEKUiF0tVEJ7j6qZLrFfk87JKnObUlktb3Vm9gN8KuG7DxrzlF42V74zrdQAxTH5k4nwmbx2X9kaUex5DcLbuOImtmnKw`,
-        "Ced-Source-Id": 500,
-        "Ced-Source-Name": "shopify",
-        "Ced-Target-Id": 530,
-        "Ced-Target-Name": "amazon",
-      },
+      headers: headers,
       body: JSON.stringify(payloadAttribute),
     })
       .then((res) => res.json())
       .then((fetchedData) => {
         console.log(fetchedData.data);
+        setLoading(false);
+
         let nextOptions = [];
         var duplicateKeys = {};
         for (let i in fetchedData.data) {
-          // nextOptions = [...nextOptions, ...Object.keys(fetchedData.data[i])];
           for (let j in fetchedData.data[i]) {
             console.log(i, j);
             if (!duplicateKeys[fetchedData.data[i][j]["label"]]) {
@@ -191,71 +168,91 @@ function App() {
   };
   return (
     <div className="App">
-      {selectRow.map((it, i) => (
-        <Card sectioned>
-          {" "}
-          <Select
-            options={options[i]}
-            onChange={(e) => handleOptionsChange(e, i)}
-            value={selectedCategory[i]}
-            placeholder="Select Category"
-          />
-        </Card>
-      ))}
-      {loading && (
-        <Frame>
-          <Card sectioned>
-            <Loading />
-            <Card sectioned>
-              <TextContainer>
-                <SkeletonBodyText />
-              </TextContainer>
-            </Card>
-          </Card>
-        </Frame>
-      )}
-      {selectedAttributeRow.length > 0 && (
-        <Card sectioned>
-          {selectedAttributeRow.map((it, i) => (
-            <Card sectioned key={selectedAttributeArray[i][0]}>
-              {" "}
-              <Link
-                url="#"
-                onClick={(e) =>
-                  deleteHandler(e, i, selectedAttributeArray[i][0]["label"])
-                }
-              >
-                Delete
-              </Link>
-              <Select options={selectedAttributeArray[i]} />
-              <br />
-              <TextField placeholder="shopify_attribute" />
-            </Card>
-          ))}
-        </Card>
-      )}
-
-      {attributeOptions && (
-        <Card title="Amazon attributes">
-          <Select
-            // label=""
-            options={attributeOptionsArray}
-            onChange={(e) => attributeChangeHandler(e)}
-            placeholder="Select an Attribute"
-          />
-        </Card>
-      )}
-      {addattributesDisplay && (
-        <Card title="Optional Attributes" sectioned>
-          <Button
-            primary
-            onClick={() => showAttributeOptions(true)}
-            disabled={attributeOptions}
+      <Page fullWidth>
+        <Layout>
+          <Layout.AnnotatedSection
+            id="storeDetails"
+            title="Amazon Sales Channel"
+            description="Add attributes to your listed Products."
           >
-            Add Attributes
-          </Button>
-        </Card>
-      )}
+            <Card sectioned>
+              <FormLayout>
+                {selectRow.map((it, i) => (
+                  <Card sectioned>
+                    {" "}
+                    <Select
+                      options={options[i]}
+                      onChange={(e) => handleOptionsChange(e, i)}
+                      value={selectedCategory[i]}
+                      placeholder="Select Category"
+                    />
+                  </Card>
+                ))}
+                {loading && (
+                  <Frame>
+                    <Card sectioned>
+                      <Loading />
+                      <Card sectioned>
+                        <TextContainer>
+                          <SkeletonBodyText />
+                        </TextContainer>
+                      </Card>
+                    </Card>
+                  </Frame>
+                )}
+                {selectedAttributeRow.length > 0 && (
+                  <Card sectioned>
+                    {selectedAttributeRow.map((it, i) => (
+                      <Card sectioned key={selectedAttributeArray[i][0]}>
+                        {" "}
+                        <Link
+                          url="#"
+                          onClick={(e) =>
+                            deleteHandler(
+                              e,
+                              i,
+                              selectedAttributeArray[i][0]["label"]
+                            )
+                          }
+                        >
+                          Delete
+                        </Link>
+                        <Select
+                          options={selectedAttributeArray[i]}
+                          label="Amazon Attribute"
+                        />
+                        <br />
+                        <TextField placeholder="shopify_attribute" />
+                      </Card>
+                    ))}
+                  </Card>
+                )}
+
+                {attributeOptions && (
+                  <Card title="Amazon attributes">
+                    <Select
+                      options={attributeOptionsArray}
+                      onChange={(e) => attributeChangeHandler(e)}
+                      placeholder="Select an Attribute"
+                    />
+                  </Card>
+                )}
+                {addattributesDisplay && (
+                  <Card title="Optional Attributes" sectioned>
+                    <Button
+                      primary
+                      onClick={() => showAttributeOptions(true)}
+                      disabled={attributeOptions}
+                    >
+                      Add Attributes
+                    </Button>
+                  </Card>
+                )}
+              </FormLayout>
+            </Card>
+          </Layout.AnnotatedSection>
+        </Layout>
+      </Page>
     </div>
   );
 }
