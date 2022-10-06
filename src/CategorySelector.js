@@ -1,24 +1,23 @@
-import "./App.css";
 import {
-  Button,
   Card,
   FormLayout,
   Frame,
   Layout,
-  Link,
   Loading,
   Page,
   Select,
   SkeletonBodyText,
   TextContainer,
-  TextField,
 } from "@shopify/polaris";
-import { useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
+import AttributeSelector from "./AttributeSelector";
+export const Contxt = createContext();
+
 const headers = {
   accept: "application/json",
   "Content-Type": "application/json",
   appTag: "amazon_sales_channel",
-  authorization: `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyX2lkIjoiNjMzMjlkN2YwNDUxYzA3NGFhMGUxNWE4Iiwicm9sZSI6ImN1c3RvbWVyIiwiZXhwIjoxNjY0OTg4NjM3LCJpc3MiOiJodHRwczpcL1wvYXBwcy5jZWRjb21tZXJjZS5jb20iLCJ0b2tlbl9pZCI6IjYzM2Q3ZDlkYjgyM2I5MTVhMzc0NTA3NSJ9.eZKlcA00P9R_hw-ThPqMP1G_ntdht2hoh2Sx9FhfFXsw1725An17BDLLEA5GYGEXr-vtrUMoWq2E7_sRAkFvvbBrEljQenYRUH0VxIdgFvUk3ptoh9_x63ZhOpS2LhW0v5G16fZiY4StoArQZ3TVRrzqf9b5ZGVrlxh7RjR6oZEzLg6UHqPdYXn5o1J0FdoyCndaDo8y3XwNBPUJU1BqnVMxeYYFnYlxWCpH1jq8IjSrP1YSQARMZhAfqrxuN73utQMwf5EYR4_2fM8Iz-LiwN7wVkRkoj7hDTeQtVx_736tycu6f4lLf03CZ0mxzrbAXuifl3eJsHKso0lgL4UxPg`,
+  authorization: `Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyX2lkIjoiNjI5MGRiYjIzOGUyOWExYjIzMzYwY2E5Iiwicm9sZSI6ImFkbWluIiwiZXhwIjoxNjk2NTY4MDE3LCJpc3MiOiJodHRwczpcL1wvYXBwcy5jZWRjb21tZXJjZS5jb20iLCJ0b2tlbl9pZCI6IjYzM2U1ZjUxYWRkZGFlMjIyNjczN2E5MiJ9.m5LW1XQ_w6E8Y_ZAWV-SqoqLUpgyeQXe3R7aGKhCfkxA0h0i2oESFxS3NXvsqU2zBWO9iPa5vobjXypZCEo7ZbjieaowfryVym-Yc2Kc-SkfHJfr7a2QrXxfKql0nBX0SvgEfVdWKxmVb3AK7MyT60gVUCCh82H7ExXntXA46oTvIQkK2rMTC1pCAFxFcWPTUEvz2yfuyLf62533dDfbdWwnYBxOYXrTUBN9E6aOsbl8MDfglV7bRIiKCXF1hTRjyOzUzqp_Tns4kg3oT2zXKpv7mLFcPpEPnYveRP4TGi_N5gRjfyA4o7xAxTHIxmhlRrY7ZEFUx-BcW6aZz7tYNw`,
   "Ced-Source-Id": 500,
   "Ced-Source-Name": "shopify",
   "Ced-Target-Id": 530,
@@ -40,22 +39,21 @@ var payloadAttribute = {
     category: "",
     sub_category: "",
   },
+  user_id: "63329d7f0451c074aa0e15a8",
 };
 
-function App() {
+function CategorySelector() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [options, setOptions] = useState([]);
   const [selectedCategory, setselecetedCategory] = useState([]);
   const [selectRow, setSelectRow] = useState([]);
-  const [addattributesDisplay, setAttributesDisplay] = useState(false);
-  const [attributeOptions, showAttributeOptions] = useState(false);
   const [attributeOptionsArray, setattributeOptionsArray] = useState([]);
-  const [selectedAttributeRow, setselectedAttributeRow] = useState([]);
-  const [selectedAttributeArray, setselectedAttributeArray] = useState([]);
+
   const [payload, setPayload] = useState({
     target_marketplace: "eyJtYXJrZXRwbGFjZSI6ImFsbCIsInNob3BfaWQiOm51bGx9",
     selected: [],
+    user_id: "63329d7f0451c074aa0e15a8",
     target: {
       marketplace: "amazon",
       shopId: "530",
@@ -65,45 +63,22 @@ function App() {
   const handleOptionsChange = (e, i) => {
     selectedCategory[i] = e;
     setselecetedCategory([...selectedCategory]);
-    let tempPayload = { ...payload };
     console.log(data);
     data.map((it, i) => {
       if (it.name === e) {
         if (it.hasChildren) {
-          tempPayload.selected = it.parent_id;
-          setPayload(tempPayload);
+          payload.selected = it.parent_id;
+          setPayload({ ...payload });
         } else {
           payloadAttribute.data.category = it.category["primary-category"];
           payloadAttribute.data.sub_category = it.category["sub-category"];
           categoryfetchhandler();
         }
       }
+      return 0;
     });
   };
-  const attributeChangeHandler = (e) => {
-    // alert(e);
-    setselectedAttributeRow([...selectedAttributeRow, 1]);
-    selectedAttributeArray.push([{ label: e, value: e }]);
-    setselectedAttributeArray([...selectedAttributeArray]);
-    showAttributeOptions(false);
-    attributeOptionsArray.map((it, i) => {
-      if (it.value === e) {
-        it["disabled"] = true;
-      }
-    });
-  };
-  const deleteHandler = (e, i, val) => {
-    e.preventDefault();
-    selectedAttributeArray.splice(i, 1);
-    setselectedAttributeArray([...selectedAttributeArray]);
-    selectedAttributeRow.splice(i, 1);
-    setselectedAttributeRow([...selectedAttributeRow]);
-    attributeOptionsArray.map((it, j) => {
-      if (it.label === val) {
-        it["disabled"] = false;
-      }
-    });
-  };
+
   const fetchhandler = async (e) => {
     setLoading(true);
     var url =
@@ -115,22 +90,25 @@ function App() {
       body: JSON.stringify(payload),
     });
     var fetchedData = await res.json();
-    setLoading(false);
+    console.log(fetchedData);
     setData(fetchedData.data);
+    setLoading(false);
+
     let nextOptions = [];
     fetchedData.data.map((it, i) => {
       nextOptions.push({ label: it.name, value: it.name });
+      return 0;
     });
     options.push(nextOptions);
     setOptions([...options]);
     setSelectRow([...selectRow, 1]);
   };
   useEffect(() => {
+    // alert("");
     fetchhandler();
   }, [payload]);
 
   const categoryfetchhandler = async () => {
-    setAttributesDisplay(true);
     setLoading(true);
     var url =
       "https://multi-account.sellernext.com/home/public/connector/profile/getCategoryAttributes/";
@@ -162,7 +140,7 @@ function App() {
     setattributeOptionsArray(nextOptions);
   };
   return (
-    <div className="App">
+    <div>
       <Page fullWidth>
         <Layout>
           <Layout.AnnotatedSection
@@ -195,54 +173,9 @@ function App() {
                     </Card>
                   </Frame>
                 )}
-                {selectedAttributeRow.length > 0 && (
-                  <Card sectioned>
-                    {selectedAttributeRow.map((it, i) => (
-                      <Card sectioned key={selectedAttributeArray[i][0]}>
-                        {" "}
-                        <Link
-                          url="#"
-                          onClick={(e) =>
-                            deleteHandler(
-                              e,
-                              i,
-                              selectedAttributeArray[i][0]["label"]
-                            )
-                          }
-                        >
-                          Delete
-                        </Link>
-                        <Select
-                          options={selectedAttributeArray[i]}
-                          label="Amazon Attribute"
-                        />
-                        <br />
-                        <TextField placeholder="shopify_attribute" />
-                      </Card>
-                    ))}
-                  </Card>
-                )}
-
-                {attributeOptions && (
-                  <Card title="Amazon attributes">
-                    <Select
-                      options={attributeOptionsArray}
-                      onChange={(e) => attributeChangeHandler(e)}
-                      placeholder="Select an Attribute"
-                    />
-                  </Card>
-                )}
-                {addattributesDisplay && (
-                  <Card title="Optional Attributes" sectioned>
-                    <Button
-                      primary
-                      onClick={() => showAttributeOptions(true)}
-                      disabled={attributeOptions}
-                    >
-                      Add Attributes
-                    </Button>
-                  </Card>
-                )}
+                <Contxt.Provider value={[attributeOptionsArray]}>
+                  <AttributeSelector />
+                </Contxt.Provider>
               </FormLayout>
             </Card>
           </Layout.AnnotatedSection>
@@ -252,4 +185,4 @@ function App() {
   );
 }
 
-export default App;
+export default CategorySelector;
