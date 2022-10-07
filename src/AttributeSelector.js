@@ -3,11 +3,16 @@ import React, { useContext, useState } from "react";
 import { Contxt } from "./CategorySelector";
 
 function AttributeSelector() {
-  const [attributeOptions, showAttributeOptions] = useState(false);
-  const [selectedAttributeArray, setselectedAttributeArray] = useState([]);
-  const [textInputArray, setTextInputArray] = useState([]);
-  const [attributeOptionsArray] = useContext(Contxt);
-  console.log(attributeOptionsArray);
+  const [
+    attributeOptionsArray,
+    attributeOptions,
+    showAttributeOptions,
+    selectedAttributeArray,
+    setselectedAttributeArray,
+    textInputArray,
+    setTextInputArray,
+  ] = useContext(Contxt);
+  //   console.log(attributeOptionsArray);
 
   const attributeChangeHandler = (e) => {
     // alert(e);
@@ -43,7 +48,7 @@ function AttributeSelector() {
       {selectedAttributeArray.length > 0 && (
         <Card sectioned>
           {selectedAttributeArray.map((it, i) => (
-            <Card sectioned key={it[0]}>
+            <Card sectioned key={it["label"]}>
               {" "}
               <Link
                 url="#"
@@ -51,7 +56,11 @@ function AttributeSelector() {
               >
                 Delete
               </Link>
-              <Select options={it} label="Amazon Attribute" />
+              <Select
+                options={it}
+                label="Amazon Attribute"
+                onChange={() => {}}
+              />
               <br />
               <TextField
                 placeholder="shopify_attribute"

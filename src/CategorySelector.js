@@ -49,7 +49,9 @@ function CategorySelector() {
   const [selectedCategory, setselecetedCategory] = useState([]);
   const [selectRow, setSelectRow] = useState([]);
   const [attributeOptionsArray, setattributeOptionsArray] = useState([]);
-
+  const [attributeOptions, showAttributeOptions] = useState(false);
+  const [selectedAttributeArray, setselectedAttributeArray] = useState([]);
+  const [textInputArray, setTextInputArray] = useState([]);
   const [payload, setPayload] = useState({
     target_marketplace: "eyJtYXJrZXRwbGFjZSI6ImFsbCIsInNob3BfaWQiOm51bGx9",
     selected: [],
@@ -61,47 +63,84 @@ function CategorySelector() {
   });
 
   const handleOptionsChange = (e, i) => {
-    selectedCategory[i] = e;
-    setselecetedCategory([...selectedCategory]);
-    console.log(data);
-    data.map((it, i) => {
-      if (it.name === e) {
-        if (it.hasChildren) {
-          payload.selected = it.parent_id;
-          setPayload({ ...payload });
-        } else {
-          payloadAttribute.data.category = it.category["primary-category"];
-          payloadAttribute.data.sub_category = it.category["sub-category"];
-          categoryfetchhandler();
+    showAttributeOptions(false);
+    setattributeOptionsArray([]);
+    setselectedAttributeArray([]);
+    if (selectRow.length - 1 === i) {
+      selectedCategory[i] = e;
+      setselecetedCategory([...selectedCategory]);
+      data[i].map((it, j) => {
+        if (it.name === e) {
+          if (it.hasChildren) {
+            payload.selected = it.parent_id;
+            setPayload({ ...payload });
+          } else {
+            payloadAttribute.data.category = it.category["primary-category"];
+            payloadAttribute.data.sub_category = it.category["sub-category"];
+            categoryfetchhandler();
+          }
         }
-      }
-      return 0;
-    });
+        return 0;
+      });
+    } else {
+      selectedCategory[i] = e;
+      selectedCategory.splice(i + 1);
+
+      setselecetedCategory([...selectedCategory]);
+      selectRow.splice(i + 1);
+      setSelectRow([...selectRow]);
+      let tempData = [...data];
+      tempData.splice(i + 1);
+      setData(tempData);
+      let tempOpt = [...options];
+      tempOpt.splice(i + 1);
+      setOptions(tempOpt);
+
+      data[i].map((it, j) => {
+        if (it.name === e) {
+          if (it.hasChildren) {
+            payload.selected = it.parent_id;
+            setPayload({ ...payload });
+          } else {
+            payloadAttribute.data.category = it.category["primary-category"];
+            payloadAttribute.data.sub_category = it.category["sub-category"];
+            categoryfetchhandler();
+          }
+        }
+        return 0;
+      });
+    }
   };
 
   const fetchhandler = async (e) => {
     setLoading(true);
     var url =
       "https://multi-account.sellernext.com/home/public/connector/profile/getAllCategory/";
-    // console.log(url);
     var res = await fetch(url, {
       method: "POST",
       headers: headers,
       body: JSON.stringify(payload),
     });
     var fetchedData = await res.json();
-    console.log(fetchedData);
-    setData(fetchedData.data);
+    // console.log(fetchedData);
+    let tempData = [...data];
+    tempData.push(fetchedData.data);
+
+    setData(tempData);
     setLoading(false);
+    showAttributeOptions(false);
 
     let nextOptions = [];
     fetchedData.data.map((it, i) => {
       nextOptions.push({ label: it.name, value: it.name });
       return 0;
     });
-    options.push(nextOptions);
-    setOptions([...options]);
+    let tempOptions = [...options];
+    tempOptions.push(nextOptions);
+    setOptions(tempOptions);
+    // console.log(tempOptions);
     setSelectRow([...selectRow, 1]);
+    // console.log(selectRow);
   };
   useEffect(() => {
     // alert("");
@@ -118,14 +157,14 @@ function CategorySelector() {
       body: JSON.stringify(payloadAttribute),
     });
     var fetchedData = await res.json();
-    console.log(fetchedData.data);
+    // console.log(fetchedData.data);
     setLoading(false);
 
     let nextOptions = [];
     var duplicateKeys = {};
     for (let i in fetchedData.data) {
       for (let j in fetchedData.data[i]) {
-        console.log(i, j);
+        // console.log(i, j);
         if (!duplicateKeys[fetchedData.data[i][j]["label"]]) {
           nextOptions.push({
             label: fetchedData.data[i][j]["label"],
@@ -135,7 +174,7 @@ function CategorySelector() {
         }
       }
     }
-    console.log(nextOptions.length);
+    // console.log(nextOptions.length);
 
     setattributeOptionsArray(nextOptions);
   };
@@ -151,7 +190,7 @@ function CategorySelector() {
             <Card sectioned>
               <FormLayout>
                 {selectRow.map((it, i) => (
-                  <Card sectioned>
+                  <Card sectioned key={i}>
                     {" "}
                     <Select
                       options={options[i]}
@@ -173,7 +212,17 @@ function CategorySelector() {
                     </Card>
                   </Frame>
                 )}
-                <Contxt.Provider value={[attributeOptionsArray]}>
+                <Contxt.Provider
+                  value={[
+                    attributeOptionsArray,
+                    attributeOptions,
+                    showAttributeOptions,
+                    selectedAttributeArray,
+                    setselectedAttributeArray,
+                    textInputArray,
+                    setTextInputArray,
+                  ]}
+                >
                   <AttributeSelector />
                 </Contxt.Provider>
               </FormLayout>
